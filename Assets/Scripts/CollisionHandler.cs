@@ -3,21 +3,51 @@ using UnityEngine.SceneManagement;
 
 public class CollisionHandler : MonoBehaviour
 {
-    [SerializeField] float levelLoadDelay = 2f;
-    [SerializeField] AudioClip crashes; [SerializeField] AudioClip success;
+    [SerializeField]
+    float levelLoadDelay = 2f;
+
+    [SerializeField]
+    AudioClip crashes;
+
+    [SerializeField]
+    AudioClip success;
+
+    [SerializeField]
+    ParticleSystem successParticles;
+
+    [SerializeField]
+    ParticleSystem failedParticles;
 
     AudioSource audioSource;
 
     bool isTransitioning = false;
+    bool collisionDisabled = false;
 
     void Start()
     {
         audioSource = GetComponent<AudioSource>();
     }
 
+    void Update()
+    {
+        RespondToDebugKeys();
+    }
+
+    void RespondToDebugKeys()
+    {
+        if(Input.GetKeyDown(KeyCode.L))
+        {
+            LoadNextLevel();
+        }
+        else if(Input.GetKeyDown(KeyCode.C))
+        {
+            collisionDisabled = !collisionDisabled; // toggle collision
+        }
+    }
+
     void OnCollisionEnter(Collision other)
     {
-        if (isTransitioning)
+        if (isTransitioning || collisionDisabled)
         {
             return;
         }
@@ -63,6 +93,7 @@ public class CollisionHandler : MonoBehaviour
         isTransitioning = true;
         // todo add SFX upon crash
         // to add particle effect upon crash
+        successParticles.Play();
         GetComponent<Movement>().enabled = false;
         AudioSuccess();
         Invoke("LoadNextLevel", levelLoadDelay);
@@ -73,6 +104,7 @@ public class CollisionHandler : MonoBehaviour
         isTransitioning = true;
         // todo add SFX upon crash
         // to add particle effect upon crash
+        failedParticles.Play();
         GetComponent<Movement>().enabled = false;
         AudioCrash();
         Invoke("ReloadLevel", levelLoadDelay);
